@@ -15,7 +15,7 @@ public class AppController implements Initializable {
     @FXML private AnchorPane pane;
 
     private final List<Node> nodes = new ArrayList<>();
-    private final PathFinder pathFinder = new PathFinder(nodes);
+    private final PathFinder pathFinder = new PathFinder(nodes).visualize(20);
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {

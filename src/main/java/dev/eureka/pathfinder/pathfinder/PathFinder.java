@@ -18,6 +18,8 @@ public class PathFinder implements IPathFinder {
     private int previousListSize;
     private boolean goalReached;
 
+    private long ms;
+
     public PathFinder(List<Node> nodes) {
         this.nodes = nodes;
         this.checked = new ArrayList<>();
@@ -34,36 +36,51 @@ public class PathFinder implements IPathFinder {
         setGoal(goal);
     }
 
+    public PathFinder visualize(long ms) {
+        this.ms = ms;
+        return this;
+    }
+
     @Override
     public void search() {
         reset();
 
-        while (!goalReached) {
-            previousListSize = checked.size();
-            queue.clear();
+        Runnable code = () -> {
+            while (!goalReached) {
+                try {Thread.sleep(ms);} catch (InterruptedException e) {throw new RuntimeException(e);}
 
-            checked.forEach((node) -> {
-                if (node.getType().equals(PathType.CHECKED)) return;
-                node.setType(PathType.CHECKED); // Mark current as checked
+                previousListSize = checked.size();
+                queue.clear();
 
-                List<Node> neighbours = getNeighbours(node);
-                neighbours.forEach((neighbour) -> neighbour.setParent(node));
+                checked.forEach((node) -> {
+                    if (node.getType().equals(PathType.CHECKED)) return;
+                    node.setType(PathType.CHECKED); // Mark current as checked
 
-                // Check if someone in neighbours list equals goal node
-                if (neighbours.contains(goal)) {
-                    goalReached = true;
-                }
+                    List<Node> neighbours = getNeighbours(node);
+                    neighbours.forEach((neighbour) -> neighbour.setParent(node));
 
-                queue.addAll(neighbours);
-            });
+                    // Check if someone in neighbours list equals goal node
+                    if (neighbours.contains(goal)) {
+                        goalReached = true;
+                    }
 
-            checked.addAll(queue);
-            checked = new ArrayList<>(checked.stream().distinct().toList()); // Removing duplicates
+                    queue.addAll(neighbours);
+                });
 
-            if (isPathBlocked()) throw new RuntimeException("Path is blocked.");
+                checked.addAll(queue);
+                checked = new ArrayList<>(checked.stream().distinct().toList()); // Removing duplicates
+
+                if (isPathBlocked()) throw new RuntimeException("Path is blocked.");
+            }
+
+            backTrack();
+        };
+
+        if (ms <= 0) {
+            code.run();
+        } else {
+            new Thread(code).start();
         }
-
-        backTrack();
     }
 
     @Override
@@ -98,6 +115,7 @@ public class PathFinder implements IPathFinder {
         Node current = goal;
 
         while (current != start) {
+            try {Thread.sleep(ms);} catch (InterruptedException e) {throw new RuntimeException(e);}
             current = current.getParent();
             if (current == start) break;
 
